@@ -6,7 +6,7 @@ use crate::fmt;
 use crate::hash::{Hash, Hasher};
 use crate::ops::{Deref, DerefMut};
 use crate::result::Result;
-use std::boxed::Box as StdBox;
+use alloc_crate::boxed::Box as StdBox;
 
 /// A pointer type for heap allocation.
 #[repr(transparent)]
