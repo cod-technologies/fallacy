@@ -13,9 +13,9 @@ use crate::hash::{Hash, Hasher};
 use crate::io;
 use crate::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
 use crate::slice::SliceIndex;
-use alloc_crate::vec::Vec as StdVec;
+use std::vec::Vec as StdVec;
 
-pub use alloc_crate::vec::{Drain, IntoIter};
+pub use std::vec::{Drain, IntoIter};
 
 /// A contiguous growable array type, written as `Vec<T>`, short for 'vector'.
 #[repr(transparent)]

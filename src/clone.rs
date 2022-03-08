@@ -1,7 +1,8 @@
 //! The `Clone` trait for types that cannot be 'implicitly copied'.
 
+pub use std::clone::Clone;
+
 use crate::alloc::AllocationError;
-pub use core::clone::Clone;
 
 /// Tries to clone, return an error instead of panic if allocation failed.
 pub trait TryClone: Sized {

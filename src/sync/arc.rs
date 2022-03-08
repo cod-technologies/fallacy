@@ -5,8 +5,8 @@ use crate::cmp::Ordering;
 use crate::fmt;
 use crate::hash::{Hash, Hasher};
 use crate::ops::Deref;
-use alloc_crate::sync::Arc as StdArc;
 use std::alloc::Layout;
+use std::sync::Arc as StdArc;
 
 /// A thread-safe reference-counting pointer. 'Arc' stands for 'Atomically
 /// Reference Counted'.

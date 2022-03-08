@@ -5,8 +5,13 @@ use crate::fmt;
 use crate::mem;
 use crate::ops;
 use crate::str;
-use alloc_crate::string::String as StdString;
+use std::string::String as StdString;
 
+/// A UTF-8–encoded, growable string.
+///
+/// The `String` type is the most common string type that has ownership over the
+/// contents of the string. It has a close relationship with its borrowed
+/// counterpart, the primitive `str`.
 #[repr(transparent)]
 pub struct String(StdString);
 

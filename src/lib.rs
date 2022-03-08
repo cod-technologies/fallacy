@@ -5,24 +5,26 @@
 #![feature(can_vector)]
 #![feature(try_reserve_kind)]
 
-extern crate alloc as alloc_crate;
-
 pub mod alloc;
 pub mod boxed;
 pub mod clone;
-pub mod cmp;
 pub mod collections;
 pub mod fmt;
-pub mod hash;
-pub mod ops;
-pub mod result;
+pub mod string;
 pub mod sync;
+pub mod vec;
 
-pub use core::convert;
-pub use core::iter;
-pub use core::mem;
-pub use core::option;
-pub use core::slice;
-pub use core::str;
+pub use std::any;
+pub use std::cmp;
+pub use std::convert;
 pub use std::error;
+pub use std::hash;
 pub use std::io;
+pub use std::iter;
+pub use std::mem;
+pub use std::ops;
+pub use std::option;
+pub use std::ptr;
+pub use std::result;
+pub use std::slice;
+pub use std::str;
