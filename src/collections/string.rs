@@ -1,6 +1,6 @@
 //! A UTF-8–encoded, growable string.
 
-use crate::collections::TryReserveError;
+use crate::alloc::AllocationError;
 use crate::fmt;
 use crate::mem;
 use crate::ops;
@@ -19,9 +19,10 @@ impl String {
 
     /// Creates a new empty `String` with a particular capacity.
     #[inline]
-    pub fn try_with_capacity(capacity: usize) -> Result<String, TryReserveError> {
+    pub fn try_with_capacity(capacity: usize) -> Result<String, AllocationError> {
         let mut s = StdString::new();
-        s.try_reserve(capacity)?;
+        s.try_reserve(capacity)
+            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))?;
         Ok(String(s))
     }
 
@@ -74,8 +75,10 @@ impl String {
 
     /// Appends a given string slice onto the end of this `String`.
     #[inline]
-    pub fn try_push_str(&mut self, string: &str) -> Result<(), TryReserveError> {
-        self.0.try_reserve(string.len())?;
+    pub fn try_push_str(&mut self, string: &str) -> Result<(), AllocationError> {
+        self.0
+            .try_reserve(string.len())
+            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))?;
         self.0.push_str(string);
         Ok(())
     }
@@ -91,8 +94,10 @@ impl String {
     /// If the capacity overflows, or the allocator reports a failure, then an error
     /// is returned.
     #[inline]
-    pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
-        self.0.try_reserve(additional)
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), AllocationError> {
+        self.0
+            .try_reserve(additional)
+            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))
     }
 
     /// Tries to reserve the minimum capacity for exactly `additional` more elements to
@@ -111,14 +116,16 @@ impl String {
     /// If the capacity overflows, or the allocator reports a failure, then an error
     /// is returned.
     #[inline]
-    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
-        self.0.try_reserve_exact(additional)
+    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), AllocationError> {
+        self.0
+            .try_reserve_exact(additional)
+            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))
     }
 
     /// Appends the given [`char`] to the end of this `String`.
     #[inline]
-    pub fn try_push(&mut self, ch: char) -> Result<(), TryReserveError> {
-        self.0.try_reserve(mem::size_of::<char>())?;
+    pub fn try_push(&mut self, ch: char) -> Result<(), AllocationError> {
+        self.try_reserve(mem::size_of::<char>())?;
         self.0.push(ch);
         Ok(())
     }

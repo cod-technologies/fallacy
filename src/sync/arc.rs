@@ -1,11 +1,12 @@
 //! A thread-safe reference-counting pointer.
 
-use crate::alloc::AllocError;
+use crate::alloc::AllocationError;
 use crate::cmp::Ordering;
 use crate::fmt;
 use crate::hash::{Hash, Hasher};
 use crate::ops::Deref;
 use alloc_crate::sync::Arc as StdArc;
+use std::alloc::Layout;
 
 /// A thread-safe reference-counting pointer. 'Arc' stands for 'Atomically
 /// Reference Counted'.
@@ -23,8 +24,10 @@ pub struct Arc<T: ?Sized>(StdArc<T>);
 impl<T> Arc<T> {
     /// Constructs a new `Arc<T>`, returning an error if allocation fails.
     #[inline]
-    pub fn try_new(data: T) -> Result<Arc<T>, AllocError> {
-        Ok(Arc(StdArc::try_new(data)?))
+    pub fn try_new(data: T) -> Result<Arc<T>, AllocationError> {
+        Ok(Arc(
+            StdArc::try_new(data).map_err(|_| AllocationError::AllocError(Layout::new::<T>()))?
+        ))
     }
 
     #[inline]

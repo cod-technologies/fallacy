@@ -3,6 +3,7 @@
 #![feature(allocator_api)]
 #![feature(const_fn_trait_bound)]
 #![feature(can_vector)]
+#![feature(try_reserve_kind)]
 
 extern crate alloc as alloc_crate;
 
@@ -23,4 +24,5 @@ pub use core::mem;
 pub use core::option;
 pub use core::slice;
 pub use core::str;
+pub use std::error;
 pub use std::io;
