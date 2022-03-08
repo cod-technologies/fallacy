@@ -19,6 +19,8 @@ pub mod sync;
 
 pub use core::convert;
 pub use core::iter;
+pub use core::mem;
 pub use core::option;
 pub use core::slice;
+pub use core::str;
 pub use std::io;
