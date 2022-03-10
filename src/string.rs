@@ -339,4 +339,11 @@ impl TryClone for String {
         s.try_push_str(self)?;
         Ok(s)
     }
+
+    #[inline]
+    fn try_clone_from(&mut self, source: &Self) -> Result<(), AllocationError> {
+        self.clear();
+        self.try_push_str(source)?;
+        Ok(())
+    }
 }

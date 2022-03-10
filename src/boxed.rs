@@ -341,4 +341,9 @@ impl<T: TryClone> TryClone for Box<T> {
         let clone = self.0.try_clone()?;
         Self::try_new(clone)
     }
+
+    #[inline]
+    fn try_clone_from(&mut self, source: &Self) -> Result<(), AllocationError> {
+        self.as_mut().try_clone_from(source)
+    }
 }
