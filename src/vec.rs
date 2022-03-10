@@ -74,9 +74,8 @@ impl<T, A: Allocator> Vec<T, A> {
     /// is returned.
     #[inline]
     pub fn try_reserve(&mut self, additional: usize) -> Result<(), AllocationError> {
-        self.0
-            .try_reserve(additional)
-            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))
+        self.0.try_reserve(additional)?;
+        Ok(())
     }
 
     /// Tries to reserve the minimum capacity for exactly `additional`
@@ -95,9 +94,8 @@ impl<T, A: Allocator> Vec<T, A> {
     /// is returned.
     #[inline]
     pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), AllocationError> {
-        self.0
-            .try_reserve_exact(additional)
-            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))
+        self.0.try_reserve_exact(additional)?;
+        Ok(())
     }
 
     #[inline]

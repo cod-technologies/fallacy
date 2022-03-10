@@ -1,7 +1,7 @@
 //! A pointer type for heap allocation.
 
 use crate::alloc::{AllocationError, Allocator, Global, Layout};
-use crate::clone::{CloneError, TryClone};
+use crate::clone::TryClone;
 use crate::fmt;
 use std::boxed::Box as StdBox;
 use std::cmp::Ordering;
@@ -21,7 +21,7 @@ impl<T> Box<T> {
     #[inline]
     pub fn try_new(x: T) -> Result<Self, AllocationError> {
         Ok(Box(
-            StdBox::try_new(x).map_err(|_| AllocationError::AllocError(Layout::new::<T>()))?
+            StdBox::try_new(x).map_err(|_| AllocationError::new(Layout::new::<T>()))?
         ))
     }
 }
@@ -54,7 +54,7 @@ impl<T, A: Allocator> Box<T, A> {
     #[inline]
     pub fn try_new_in(x: T, alloc: A) -> Result<Self, AllocationError> {
         Ok(Box(
-            StdBox::try_new_in(x, alloc).map_err(|_| AllocationError::AllocError(Layout::new::<T>()))?
+            StdBox::try_new_in(x, alloc).map_err(|_| AllocationError::new(Layout::new::<T>()))?
         ))
     }
 }
@@ -337,8 +337,8 @@ impl<T: ?Sized, A: Allocator> fmt::Pointer for Box<T, A> {
 
 impl<T: TryClone> TryClone for Box<T> {
     #[inline]
-    fn try_clone(&self) -> Result<Self, CloneError> {
+    fn try_clone(&self) -> Result<Self, AllocationError> {
         let clone = self.0.try_clone()?;
-        Ok(Self::try_new(clone)?)
+        Self::try_new(clone)
     }
 }

@@ -8,9 +8,14 @@ use std::fmt;
 
 /// The error type for allocation failure.
 #[derive(Debug)]
-pub enum AllocationError {
-    AllocError(Layout),
-    CapacityOverflow(usize),
+#[repr(transparent)]
+pub struct AllocationError(Layout);
+
+impl AllocationError {
+    #[inline]
+    pub(crate) const fn new(layout: Layout) -> Self {
+        AllocationError(layout)
+    }
 }
 
 impl Error for AllocationError {}
@@ -18,28 +23,23 @@ impl Error for AllocationError {}
 impl fmt::Display for AllocationError {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            AllocationError::AllocError(layout) => {
-                write!(
-                    f,
-                    "failed to allocate memory, required layout {{size: {}, align: {}}}",
-                    layout.size(),
-                    layout.align()
-                )
-            }
-            AllocationError::CapacityOverflow(cap) => {
-                write!(f, "the computed capacity exceeded the collection's maximum({})", cap)
-            }
-        }
+        write!(
+            f,
+            "failed to allocate memory, required layout {{size: {}, align: {}}}",
+            self.0.size(),
+            self.0.align()
+        )
     }
 }
 
-impl AllocationError {
+impl From<TryReserveError> for AllocationError {
     #[inline]
-    pub(crate) fn from_try_reserve_error(e: TryReserveError, cap: usize) -> Self {
+    fn from(e: TryReserveError) -> Self {
         match e.kind() {
-            TryReserveErrorKind::CapacityOverflow => AllocationError::CapacityOverflow(cap),
-            TryReserveErrorKind::AllocError { layout, .. } => AllocationError::AllocError(layout),
+            TryReserveErrorKind::AllocError { layout, .. } => AllocationError::new(layout),
+            TryReserveErrorKind::CapacityOverflow => {
+                unreachable!("unexpected capacity overflow occurred while cloning")
+            }
         }
     }
 }

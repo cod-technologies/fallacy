@@ -1,7 +1,7 @@
 //! A UTF-8–encoded, growable string.
 
 use crate::alloc::AllocationError;
-use crate::clone::{CloneError, TryClone};
+use crate::clone::TryClone;
 use crate::fmt;
 use std::mem;
 use std::ops;
@@ -27,8 +27,7 @@ impl String {
     #[inline]
     pub fn try_with_capacity(capacity: usize) -> Result<String, AllocationError> {
         let mut s = StdString::new();
-        s.try_reserve(capacity)
-            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))?;
+        s.try_reserve(capacity)?;
         Ok(String(s))
     }
 
@@ -82,9 +81,7 @@ impl String {
     /// Appends a given string slice onto the end of this `String`.
     #[inline]
     pub fn try_push_str(&mut self, string: &str) -> Result<(), AllocationError> {
-        self.0
-            .try_reserve(string.len())
-            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))?;
+        self.0.try_reserve(string.len())?;
         self.0.push_str(string);
         Ok(())
     }
@@ -101,9 +98,8 @@ impl String {
     /// is returned.
     #[inline]
     pub fn try_reserve(&mut self, additional: usize) -> Result<(), AllocationError> {
-        self.0
-            .try_reserve(additional)
-            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))
+        self.0.try_reserve(additional)?;
+        Ok(())
     }
 
     /// Tries to reserve the minimum capacity for exactly `additional` more elements to
@@ -123,9 +119,8 @@ impl String {
     /// is returned.
     #[inline]
     pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), AllocationError> {
-        self.0
-            .try_reserve_exact(additional)
-            .map_err(|e| AllocationError::from_try_reserve_error(e, usize::MAX))
+        self.0.try_reserve_exact(additional)?;
+        Ok(())
     }
 
     /// Appends the given [`char`] to the end of this `String`.
@@ -339,7 +334,7 @@ impl fmt::Write for String {
 
 impl TryClone for String {
     #[inline]
-    fn try_clone(&self) -> Result<Self, CloneError> {
+    fn try_clone(&self) -> Result<Self, AllocationError> {
         let mut s = String::new();
         s.try_push_str(self)?;
         Ok(s)

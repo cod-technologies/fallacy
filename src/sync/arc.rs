@@ -1,7 +1,7 @@
 //! A thread-safe reference-counting pointer.
 
 use crate::alloc::AllocationError;
-use crate::clone::{CloneError, TryClone};
+use crate::clone::TryClone;
 use crate::fmt;
 use std::alloc::Layout;
 use std::cmp::Ordering;
@@ -27,7 +27,7 @@ impl<T> Arc<T> {
     #[inline]
     pub fn try_new(data: T) -> Result<Arc<T>, AllocationError> {
         Ok(Arc(
-            StdArc::try_new(data).map_err(|_| AllocationError::AllocError(Layout::new::<T>()))?
+            StdArc::try_new(data).map_err(|_| AllocationError::new(Layout::new::<T>()))?
         ))
     }
 
@@ -59,7 +59,7 @@ impl<T: ?Sized> TryClone for Arc<T> {
     /// This creates another pointer to the same allocation, increasing the
     /// strong reference count.
     #[inline]
-    fn try_clone(&self) -> Result<Self, CloneError> {
+    fn try_clone(&self) -> Result<Self, AllocationError> {
         Ok(Arc(self.0.clone()))
     }
 }
