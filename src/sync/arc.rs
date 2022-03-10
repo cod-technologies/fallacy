@@ -1,6 +1,7 @@
 //! A thread-safe reference-counting pointer.
 
 use crate::alloc::AllocationError;
+use crate::clone::{CloneError, TryClone};
 use crate::cmp::Ordering;
 use crate::fmt;
 use crate::hash::{Hash, Hasher};
@@ -49,6 +50,17 @@ impl<T: ?Sized> Clone for Arc<T> {
     #[inline]
     fn clone(&self) -> Arc<T> {
         Arc(self.0.clone())
+    }
+}
+
+impl<T: ?Sized> TryClone for Arc<T> {
+    /// Makes a clone of the `Arc` pointer.
+    ///
+    /// This creates another pointer to the same allocation, increasing the
+    /// strong reference count.
+    #[inline]
+    fn try_clone(&self) -> Result<Self, CloneError> {
+        Ok(Arc(self.0.clone()))
     }
 }
 

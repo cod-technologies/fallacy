@@ -1,7 +1,6 @@
 //! A library for fallible allocations, collections and operations.
 
 #![feature(allocator_api)]
-#![feature(const_fn_trait_bound)]
 #![feature(can_vector)]
 #![feature(try_reserve_kind)]
 

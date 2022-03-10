@@ -22,7 +22,7 @@ impl fmt::Display for AllocationError {
             AllocationError::AllocError(layout) => {
                 write!(
                     f,
-                    "failed to allocate memory, required layout {{ size: {}, align: {}  }}",
+                    "failed to allocate memory, required layout {{size: {}, align: {}}}",
                     layout.size(),
                     layout.align()
                 )

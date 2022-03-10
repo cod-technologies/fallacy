@@ -1,6 +1,7 @@
 //! A UTF-8–encoded, growable string.
 
 use crate::alloc::AllocationError;
+use crate::clone::{CloneError, TryClone};
 use crate::fmt;
 use crate::mem;
 use crate::ops;
@@ -333,5 +334,14 @@ impl fmt::Write for String {
     #[inline]
     fn write_char(&mut self, c: char) -> fmt::Result {
         self.try_push(c).map_err(|_| fmt::Error)
+    }
+}
+
+impl TryClone for String {
+    #[inline]
+    fn try_clone(&self) -> Result<Self, CloneError> {
+        let mut s = String::new();
+        s.try_push_str(self)?;
+        Ok(s)
     }
 }

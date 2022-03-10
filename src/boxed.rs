@@ -1,7 +1,7 @@
 //! A pointer type for heap allocation.
 
 use crate::alloc::{AllocationError, Allocator, Global, Layout};
-use crate::clone::TryClone;
+use crate::clone::{CloneError, TryClone};
 use crate::cmp::Ordering;
 use crate::fmt;
 use crate::hash::{Hash, Hasher};
@@ -337,8 +337,8 @@ impl<T: ?Sized, A: Allocator> fmt::Pointer for Box<T, A> {
 
 impl<T: TryClone> TryClone for Box<T> {
     #[inline]
-    fn try_clone(&self) -> Result<Self, AllocationError> {
+    fn try_clone(&self) -> Result<Self, CloneError> {
         let clone = self.0.try_clone()?;
-        Self::try_new(clone)
+        Ok(Self::try_new(clone)?)
     }
 }
