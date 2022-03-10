@@ -7,12 +7,12 @@
 //! Vectors ensure they never allocate more than `isize::MAX` bytes.
 
 use crate::alloc::{AllocationError, Allocator, Global};
-use crate::cmp::Ordering;
 use crate::fmt;
-use crate::hash::{Hash, Hasher};
-use crate::io;
-use crate::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
-use crate::slice::SliceIndex;
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
+use std::io;
+use std::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
+use std::slice::SliceIndex;
 use std::vec::Vec as StdVec;
 
 pub use std::vec::{Drain, IntoIter};

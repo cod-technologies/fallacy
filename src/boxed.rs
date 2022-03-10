@@ -2,12 +2,12 @@
 
 use crate::alloc::{AllocationError, Allocator, Global, Layout};
 use crate::clone::{CloneError, TryClone};
-use crate::cmp::Ordering;
 use crate::fmt;
-use crate::hash::{Hash, Hasher};
-use crate::ops::{Deref, DerefMut};
-use crate::result::Result;
 use std::boxed::Box as StdBox;
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
+use std::ops::{Deref, DerefMut};
+use std::result::Result;
 
 /// A pointer type for heap allocation.
 #[repr(transparent)]

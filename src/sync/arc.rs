@@ -2,11 +2,11 @@
 
 use crate::alloc::AllocationError;
 use crate::clone::{CloneError, TryClone};
-use crate::cmp::Ordering;
 use crate::fmt;
-use crate::hash::{Hash, Hasher};
-use crate::ops::Deref;
 use std::alloc::Layout;
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
+use std::ops::Deref;
 use std::sync::Arc as StdArc;
 
 /// A thread-safe reference-counting pointer. 'Arc' stands for 'Atomically

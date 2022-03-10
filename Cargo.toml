@@ -10,3 +10,6 @@ keywords = ["fallible", "alloc", "allocation", "collection",]
 repository = "https://github.com/cod-technologies/fallacy.git"
 homepage = "https://github.com/cod-technologies/fallacy"
 documentation = "https://docs.rs/fallacy/"
+
+[features]
+export-std = []

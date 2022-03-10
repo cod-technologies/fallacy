@@ -3,9 +3,9 @@
 use crate::alloc::AllocationError;
 use crate::clone::{CloneError, TryClone};
 use crate::fmt;
-use crate::mem;
-use crate::ops;
-use crate::str;
+use std::mem;
+use std::ops;
+use std::str;
 use std::string::String as StdString;
 
 /// A UTF-8–encoded, growable string.
