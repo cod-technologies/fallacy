@@ -5,6 +5,7 @@
 #![feature(try_reserve_kind)]
 
 pub mod alloc;
+pub mod borrow;
 pub mod boxed;
 pub mod clone;
 pub mod collections;
