@@ -2,7 +2,7 @@
 
 use crate::alloc::AllocationError;
 use crate::clone::TryClone;
-use crate::fmt;
+use std::fmt;
 use std::mem;
 use std::ops;
 use std::str;

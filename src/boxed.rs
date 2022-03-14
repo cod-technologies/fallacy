@@ -1,10 +1,11 @@
 //! A pointer type for heap allocation.
 
-use crate::alloc::{AllocationError, Allocator, Global, Layout};
+use crate::alloc::AllocationError;
 use crate::clone::TryClone;
-use crate::fmt;
+use std::alloc::{Allocator, Global, Layout};
 use std::boxed::Box as StdBox;
 use std::cmp::Ordering;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 use std::result::Result;

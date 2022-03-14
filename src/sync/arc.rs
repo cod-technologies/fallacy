@@ -2,9 +2,9 @@
 
 use crate::alloc::AllocationError;
 use crate::clone::TryClone;
-use crate::fmt;
 use std::alloc::Layout;
 use std::cmp::Ordering;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::sync::Arc as StdArc;

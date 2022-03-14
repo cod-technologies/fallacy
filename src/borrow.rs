@@ -1,10 +1,9 @@
 //! A module for working with borrowed data.
 
-pub use std::borrow::{Borrow, BorrowMut};
-use std::ops::Deref;
-
 use crate::alloc::AllocationError;
 use crate::clone::TryClone;
+use std::borrow::Borrow;
+use std::ops::Deref;
 
 /// A generalization of `TryClone` to borrowed data.
 ///

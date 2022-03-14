@@ -6,16 +6,15 @@
 //!
 //! Vectors ensure they never allocate more than `isize::MAX` bytes.
 
-use crate::alloc::{AllocationError, Allocator, Global};
-use crate::fmt;
+use crate::alloc::AllocationError;
+use std::alloc::{Allocator, Global};
 use std::cmp::Ordering;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::io;
 use std::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
 use std::slice::SliceIndex;
-use std::vec::Vec as StdVec;
-
-pub use std::vec::{Drain, IntoIter};
+use std::vec::{Drain, IntoIter, Vec as StdVec};
 
 /// A contiguous growable array type, written as `Vec<T>`, short for 'vector'.
 #[repr(transparent)]

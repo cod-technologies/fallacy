@@ -1,7 +1,5 @@
 //! The `Clone` trait for types that cannot be 'implicitly copied'.
 
-pub use std::clone::Clone;
-
 use crate::alloc::AllocationError;
 
 /// Tries to clone, return an error instead of panic if allocation failed.

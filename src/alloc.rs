@@ -1,7 +1,6 @@
 //! Memory allocation & deallocation.
 
-pub use std::alloc::{AllocError, Allocator, Global, Layout, LayoutError};
-
+use std::alloc::Layout;
 use std::collections::{TryReserveError, TryReserveErrorKind};
 use std::error::Error;
 use std::fmt;
