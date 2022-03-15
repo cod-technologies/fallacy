@@ -8,18 +8,18 @@ use std::fmt;
 /// The error type for allocation failure.
 #[derive(Debug)]
 #[repr(transparent)]
-pub struct AllocationError(Layout);
+pub struct AllocError(Layout);
 
-impl AllocationError {
+impl AllocError {
     #[inline]
     pub(crate) const fn new(layout: Layout) -> Self {
-        AllocationError(layout)
+        AllocError(layout)
     }
 }
 
-impl Error for AllocationError {}
+impl Error for AllocError {}
 
-impl fmt::Display for AllocationError {
+impl fmt::Display for AllocError {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -31,11 +31,11 @@ impl fmt::Display for AllocationError {
     }
 }
 
-impl From<TryReserveError> for AllocationError {
+impl From<TryReserveError> for AllocError {
     #[inline]
     fn from(e: TryReserveError) -> Self {
         match e.kind() {
-            TryReserveErrorKind::AllocError { layout, .. } => AllocationError::new(layout),
+            TryReserveErrorKind::AllocError { layout, .. } => AllocError::new(layout),
             TryReserveErrorKind::CapacityOverflow => {
                 unreachable!("unexpected capacity overflow occurred while cloning")
             }

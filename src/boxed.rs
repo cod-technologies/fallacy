@@ -1,6 +1,6 @@
 //! A pointer type for heap allocation.
 
-use crate::alloc::AllocationError;
+use crate::alloc::AllocError;
 use crate::clone::TryClone;
 use std::alloc::{Allocator, Global, Layout};
 use std::boxed::Box as StdBox;
@@ -20,10 +20,8 @@ impl<T> Box<T> {
     ///
     /// This doesn't actually allocate if `T` is zero-sized.
     #[inline]
-    pub fn try_new(x: T) -> Result<Self, AllocationError> {
-        Ok(Box(
-            StdBox::try_new(x).map_err(|_| AllocationError::new(Layout::new::<T>()))?
-        ))
+    pub fn try_new(x: T) -> Result<Self, AllocError> {
+        Ok(Box(StdBox::try_new(x).map_err(|_| AllocError::new(Layout::new::<T>()))?))
     }
 }
 
@@ -53,9 +51,9 @@ impl<T, A: Allocator> Box<T, A> {
     ///
     /// This doesn't actually allocate if `T` is zero-sized.
     #[inline]
-    pub fn try_new_in(x: T, alloc: A) -> Result<Self, AllocationError> {
+    pub fn try_new_in(x: T, alloc: A) -> Result<Self, AllocError> {
         Ok(Box(
-            StdBox::try_new_in(x, alloc).map_err(|_| AllocationError::new(Layout::new::<T>()))?
+            StdBox::try_new_in(x, alloc).map_err(|_| AllocError::new(Layout::new::<T>()))?
         ))
     }
 }
@@ -338,13 +336,13 @@ impl<T: ?Sized, A: Allocator> fmt::Pointer for Box<T, A> {
 
 impl<T: TryClone> TryClone for Box<T> {
     #[inline]
-    fn try_clone(&self) -> Result<Self, AllocationError> {
+    fn try_clone(&self) -> Result<Self, AllocError> {
         let clone = self.0.try_clone()?;
         Self::try_new(clone)
     }
 
     #[inline]
-    fn try_clone_from(&mut self, source: &Self) -> Result<(), AllocationError> {
+    fn try_clone_from(&mut self, source: &Self) -> Result<(), AllocError> {
         self.as_mut().try_clone_from(source)
     }
 }

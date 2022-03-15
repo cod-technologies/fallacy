@@ -6,7 +6,7 @@
 //!
 //! Vectors ensure they never allocate more than `isize::MAX` bytes.
 
-use crate::alloc::AllocationError;
+use crate::alloc::AllocError;
 use std::alloc::{Allocator, Global};
 use std::cmp::Ordering;
 use std::fmt;
@@ -35,7 +35,7 @@ impl<T> Vec<T> {
     /// The vector will be able to hold exactly `capacity` elements without
     /// reallocating. If `capacity` is 0, the vector will not allocate.
     #[inline]
-    pub fn try_with_capacity(capacity: usize) -> Result<Self, AllocationError> {
+    pub fn try_with_capacity(capacity: usize) -> Result<Self, AllocError> {
         Self::try_with_capacity_in(capacity, Global)
     }
 }
@@ -55,7 +55,7 @@ impl<T, A: Allocator> Vec<T, A> {
     /// The vector will be able to hold exactly `capacity` elements without
     /// reallocating. If `capacity` is 0, the vector will not allocate.
     #[inline]
-    pub fn try_with_capacity_in(capacity: usize, alloc: A) -> Result<Self, AllocationError> {
+    pub fn try_with_capacity_in(capacity: usize, alloc: A) -> Result<Self, AllocError> {
         let mut vec = Vec::new_in(alloc);
         vec.try_reserve(capacity)?;
         Ok(vec)
@@ -72,7 +72,7 @@ impl<T, A: Allocator> Vec<T, A> {
     /// If the capacity overflows, or the allocator reports a failure, then an error
     /// is returned.
     #[inline]
-    pub fn try_reserve(&mut self, additional: usize) -> Result<(), AllocationError> {
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), AllocError> {
         self.0.try_reserve(additional)?;
         Ok(())
     }
@@ -92,7 +92,7 @@ impl<T, A: Allocator> Vec<T, A> {
     /// If the capacity overflows, or the allocator reports a failure, then an error
     /// is returned.
     #[inline]
-    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), AllocationError> {
+    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), AllocError> {
         self.0.try_reserve_exact(additional)?;
         Ok(())
     }
@@ -199,7 +199,7 @@ impl<T, A: Allocator> Vec<T, A> {
 
     /// Appends an element to the back of a collection.
     #[inline]
-    pub fn try_push(&mut self, value: T) -> Result<(), AllocationError> {
+    pub fn try_push(&mut self, value: T) -> Result<(), AllocError> {
         if self.len() == self.capacity() {
             self.try_reserve(1)?;
         }
@@ -265,7 +265,7 @@ impl<T, A: Allocator> Vec<T, A> {
     ///
     /// If `new_len` is less than `len`, the `Vec` is simply truncated.
     #[inline]
-    pub fn try_resize_with<F>(&mut self, new_len: usize, f: F) -> Result<(), AllocationError>
+    pub fn try_resize_with<F>(&mut self, new_len: usize, f: F) -> Result<(), AllocError>
     where
         F: FnMut() -> T,
     {

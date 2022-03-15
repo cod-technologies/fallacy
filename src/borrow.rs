@@ -1,6 +1,6 @@
 //! A module for working with borrowed data.
 
-use crate::alloc::AllocationError;
+use crate::alloc::AllocError;
 use crate::clone::TryClone;
 use std::borrow::Borrow;
 use std::ops::Deref;
@@ -16,13 +16,13 @@ pub trait TryToOwned {
     type Owned: Borrow<Self>;
 
     /// Creates owned data from borrowed data, usually by cloning.
-    fn try_to_owned(&self) -> Result<Self::Owned, AllocationError>;
+    fn try_to_owned(&self) -> Result<Self::Owned, AllocError>;
 
     /// Uses borrowed data to replace owned data, usually by cloning.
     ///
     /// This is borrow-generalized version of `TryClone::try_clone_from`.
     #[inline]
-    fn try_clone_into(&self, target: &mut Self::Owned) -> Result<(), AllocationError> {
+    fn try_clone_into(&self, target: &mut Self::Owned) -> Result<(), AllocError> {
         *target = self.try_to_owned()?;
         Ok(())
     }
@@ -35,12 +35,12 @@ where
     type Owned = T;
 
     #[inline]
-    fn try_to_owned(&self) -> Result<Self::Owned, AllocationError> {
+    fn try_to_owned(&self) -> Result<Self::Owned, AllocError> {
         self.try_clone()
     }
 
     #[inline]
-    fn try_clone_into(&self, target: &mut Self::Owned) -> Result<(), AllocationError> {
+    fn try_clone_into(&self, target: &mut Self::Owned) -> Result<(), AllocError> {
         target.try_clone_from(self)
     }
 }
@@ -68,7 +68,7 @@ where
 
 impl<B: ?Sized + TryToOwned> TryClone for Cow<'_, B> {
     #[inline]
-    fn try_clone(&self) -> Result<Self, AllocationError> {
+    fn try_clone(&self) -> Result<Self, AllocError> {
         match self {
             Cow::Borrowed(b) => Ok(Cow::Borrowed(*b)),
             Cow::Owned(o) => {
@@ -79,7 +79,7 @@ impl<B: ?Sized + TryToOwned> TryClone for Cow<'_, B> {
     }
 
     #[inline]
-    fn try_clone_from(&mut self, source: &Self) -> Result<(), AllocationError> {
+    fn try_clone_from(&mut self, source: &Self) -> Result<(), AllocError> {
         match (self, source) {
             (&mut Cow::Owned(ref mut dest), &Cow::Owned(ref o)) => o.borrow().try_clone_into(dest)?,
             (t, s) => *t = s.try_clone()?,
@@ -108,7 +108,7 @@ impl<B: ?Sized + TryToOwned> Cow<'_, B> {
     ///
     /// Clones the data if it is not already owned.
     #[inline]
-    pub fn to_mut(&mut self) -> Result<&mut <B as TryToOwned>::Owned, AllocationError> {
+    pub fn to_mut(&mut self) -> Result<&mut <B as TryToOwned>::Owned, AllocError> {
         match self {
             Cow::Borrowed(borrowed) => {
                 *self = Cow::Owned(borrowed.try_to_owned()?);
@@ -125,7 +125,7 @@ impl<B: ?Sized + TryToOwned> Cow<'_, B> {
     ///
     /// Clones the data if it is not already owned.
     #[inline]
-    pub fn into_owned(self) -> Result<<B as TryToOwned>::Owned, AllocationError> {
+    pub fn into_owned(self) -> Result<<B as TryToOwned>::Owned, AllocError> {
         match self {
             Cow::Borrowed(borrowed) => borrowed.try_to_owned(),
             Cow::Owned(owned) => Ok(owned),
