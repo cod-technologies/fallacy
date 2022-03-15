@@ -2,6 +2,7 @@
 
 use crate::alloc::AllocError;
 use crate::clone::TryClone;
+use crate::string::String;
 use std::borrow::Borrow;
 use std::ops::Deref;
 
@@ -42,6 +43,23 @@ where
     #[inline]
     fn try_clone_into(&self, target: &mut Self::Owned) -> Result<(), AllocError> {
         target.try_clone_from(self)
+    }
+}
+
+impl TryToOwned for str {
+    type Owned = String;
+
+    #[inline]
+    fn try_to_owned(&self) -> Result<Self::Owned, AllocError> {
+        let mut s = String::new();
+        s.try_push_str(self)?;
+        Ok(s)
+    }
+
+    #[inline]
+    fn try_clone_into(&self, target: &mut String) -> Result<(), AllocError> {
+        target.clear();
+        target.try_push_str(self)
     }
 }
 
@@ -145,5 +163,12 @@ where
             Cow::Borrowed(borrowed) => borrowed,
             Cow::Owned(owned) => owned.borrow(),
         }
+    }
+}
+
+impl<T: ?Sized + TryToOwned> AsRef<T> for Cow<'_, T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        self
     }
 }

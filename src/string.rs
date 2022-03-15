@@ -1,7 +1,9 @@
 //! A UTF-8–encoded, growable string.
 
 use crate::alloc::AllocError;
+use crate::borrow::{Cow, TryToOwned};
 use crate::clone::TryClone;
+use std::borrow::Borrow;
 use std::fmt;
 use std::mem;
 use std::ops;
@@ -332,6 +334,13 @@ impl fmt::Write for String {
     }
 }
 
+impl Borrow<str> for String {
+    #[inline]
+    fn borrow(&self) -> &str {
+        self
+    }
+}
+
 impl TryClone for String {
     #[inline]
     fn try_clone(&self) -> Result<Self, AllocError> {
@@ -345,5 +354,110 @@ impl TryClone for String {
         self.clear();
         self.try_push_str(source)?;
         Ok(())
+    }
+}
+
+impl AsRef<str> for String {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        self
+    }
+}
+
+impl AsMut<str> for String {
+    #[inline]
+    fn as_mut(&mut self) -> &mut str {
+        self
+    }
+}
+
+impl AsRef<[u8]> for String {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
+impl TryFrom<&str> for String {
+    type Error = AllocError;
+
+    #[inline]
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        s.try_to_owned()
+    }
+}
+
+impl TryFrom<&mut str> for String {
+    type Error = AllocError;
+
+    #[inline]
+    fn try_from(s: &mut str) -> Result<Self, Self::Error> {
+        s.try_to_owned()
+    }
+}
+
+impl TryFrom<&String> for String {
+    type Error = AllocError;
+
+    #[inline]
+    fn try_from(s: &String) -> Result<Self, Self::Error> {
+        s.try_clone()
+    }
+}
+
+impl<'a> TryFrom<Cow<'a, str>> for String {
+    type Error = AllocError;
+
+    #[inline]
+    fn try_from(s: Cow<'a, str>) -> Result<Self, Self::Error> {
+        s.into_owned()
+    }
+}
+
+impl<'a> From<&'a str> for Cow<'a, str> {
+    #[inline]
+    fn from(s: &'a str) -> Cow<'a, str> {
+        Cow::Borrowed(s)
+    }
+}
+
+impl<'a> From<String> for Cow<'a, str> {
+    #[inline]
+    fn from(s: String) -> Cow<'a, str> {
+        Cow::Owned(s)
+    }
+}
+
+impl<'a> From<&'a String> for Cow<'a, str> {
+    #[inline]
+    fn from(s: &'a String) -> Cow<'a, str> {
+        Cow::Borrowed(s.as_str())
+    }
+}
+
+/// A trait for converting a value to a `String`.
+pub trait TryToString {
+    /// Converts the given value to a `String`.
+    fn try_to_string(&self) -> Result<String, AllocError>;
+}
+
+impl TryToString for str {
+    #[inline]
+    fn try_to_string(&self) -> Result<String, AllocError> {
+        self.try_to_owned()
+    }
+}
+
+impl TryToString for Cow<'_, str> {
+    #[inline]
+    fn try_to_string(&self) -> Result<String, AllocError> {
+        self.as_ref().try_to_owned()
+    }
+}
+
+impl TryToString for String {
+    #[inline]
+    fn try_to_string(&self) -> Result<String, AllocError> {
+        self.try_clone()
     }
 }
