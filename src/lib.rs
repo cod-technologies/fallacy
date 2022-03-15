@@ -3,6 +3,7 @@
 #![feature(allocator_api)]
 #![feature(can_vector)]
 #![feature(try_reserve_kind)]
+#![feature(fmt_internals)]
 
 pub mod alloc;
 pub mod borrow;
