@@ -37,7 +37,7 @@ impl From<TryReserveError> for AllocError {
         match e.kind() {
             TryReserveErrorKind::AllocError { layout, .. } => AllocError::new(layout),
             TryReserveErrorKind::CapacityOverflow => {
-                unreachable!("unexpected capacity overflow occurred while cloning")
+                unreachable!("unexpected capacity overflow occurred")
             }
         }
     }

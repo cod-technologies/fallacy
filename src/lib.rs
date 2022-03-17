@@ -4,6 +4,7 @@
 #![feature(can_vector)]
 #![feature(try_reserve_kind)]
 #![feature(fmt_internals)]
+#![feature(min_specialization)]
 
 pub mod alloc;
 pub mod borrow;

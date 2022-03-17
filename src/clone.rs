@@ -36,6 +36,19 @@ macro_rules! impl_try_clone {
 
 impl_try_clone!(bool, u8, u16, u32, u64, i8, i16, i32, i64, usize, isize);
 
+impl<T> TryClone for &T {
+    #[inline]
+    fn try_clone(&self) -> Result<Self, AllocError> {
+        Ok(*self)
+    }
+
+    #[inline]
+    fn try_clone_from(&mut self, source: &Self) -> Result<(), AllocError> {
+        *self = *source;
+        Ok(())
+    }
+}
+
 impl<T: TryClone> TryClone for Option<T> {
     #[inline]
     fn try_clone(&self) -> Result<Self, AllocError> {

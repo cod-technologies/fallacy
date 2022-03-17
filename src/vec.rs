@@ -7,12 +7,14 @@
 //! Vectors ensure they never allocate more than `isize::MAX` bytes.
 
 use crate::alloc::AllocError;
+use crate::clone::TryClone;
 use std::alloc::{Allocator, Global};
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::io;
 use std::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
+use std::ptr;
 use std::slice::SliceIndex;
 use std::vec::{Drain, IntoIter, Vec as StdVec};
 
@@ -267,15 +269,113 @@ impl<T, A: Allocator> Vec<T, A> {
     #[inline]
     pub fn try_resize_with<F>(&mut self, new_len: usize, f: F) -> Result<(), AllocError>
     where
-        F: FnMut() -> T,
+        F: FnMut() -> Result<T, AllocError>,
     {
         let len = self.len();
         if new_len > len {
-            self.try_reserve(new_len - len)?;
-            self.0.resize_with(new_len, f);
+            self.try_extend_with(new_len - len, ExtendFunc(f))
         } else {
             self.0.truncate(new_len);
+            Ok(())
         }
+    }
+
+    /// Copy and appends all elements in a slice to the `Vec`.
+    #[inline]
+    pub fn try_copy_from_slice(&mut self, other: &[T]) -> Result<(), AllocError>
+    where
+        T: Copy,
+    {
+        let count = other.len();
+        self.try_reserve(count)?;
+
+        unsafe {
+            let ptr = self.as_mut_ptr().add(self.len());
+            ptr::copy_nonoverlapping(other.as_ptr(), ptr, count);
+            self.set_len(self.len() + count);
+        }
+
+        Ok(())
+    }
+}
+
+impl<T: TryClone, A: Allocator> Vec<T, A> {
+    /// Resizes the `Vec` in-place so that `len` is equal to `new_len`.
+    ///
+    /// If `new_len` is greater than `len`, the `Vec` is extended by the
+    /// difference, with each additional slot filled with `value`.
+    /// If `new_len` is less than `len`, the `Vec` is simply truncated.
+    #[inline]
+    pub fn try_resize(&mut self, new_len: usize, value: T) -> Result<(), AllocError> {
+        let len = self.len();
+
+        if new_len > len {
+            self.try_extend_with(new_len - len, ExtendElement(value))
+        } else {
+            self.truncate(new_len);
+            Ok(())
+        }
+    }
+
+    /// Clones and appends all elements in a slice to the `Vec`.
+    ///
+    /// Iterates over the slice `other`, clones each element, and then appends
+    /// it to this `Vec`. The `other` slice is traversed in-order.
+    #[inline]
+    pub fn try_extend_from_slice(&mut self, other: &[T]) -> Result<(), AllocError> {
+        self.try_reserve(other.len())?;
+
+        unsafe {
+            let mut ptr = self.as_mut_ptr().add(self.len());
+            // Use SetLenOnDrop to work around bug where compiler
+            // might not realize the store through `ptr` through self.set_len()
+            // don't alias.
+            let mut local_len = SetLenOnDrop::new(self);
+
+            // Write all elements
+            for val in other {
+                ptr::write(ptr, val.try_clone()?);
+                ptr = ptr.offset(1);
+                // Increment the length in every step in case next() panics
+                local_len.increment_len(1);
+            }
+
+            // len set by scope guard
+        }
+
+        Ok(())
+    }
+}
+
+impl<T, A: Allocator> Vec<T, A> {
+    /// Extend the vector by `n` values, using the given generator.
+    fn try_extend_with<E: ExtendWith<T>>(&mut self, n: usize, mut value: E) -> Result<(), AllocError> {
+        self.try_reserve(n)?;
+
+        unsafe {
+            let mut ptr = self.as_mut_ptr().add(self.len());
+            // Use SetLenOnDrop to work around bug where compiler
+            // might not realize the store through `ptr` through self.set_len()
+            // don't alias.
+            let mut local_len = SetLenOnDrop::new(self);
+
+            // Write all elements except the last one
+            for _ in 1..n {
+                ptr::write(ptr, value.next()?);
+                ptr = ptr.offset(1);
+                // Increment the length in every step in case next() panics
+                local_len.increment_len(1);
+            }
+
+            if n > 0 {
+                // We can write the last element directly without cloning needlessly
+                ptr::write(ptr, value.last()?);
+                local_len.increment_len(1);
+            }
+
+            // len set by scope guard
+        }
+
         Ok(())
     }
 }
@@ -446,5 +546,70 @@ impl<A: Allocator> io::Write for Vec<u8, A> {
             .map_err(|_| io::Error::from(io::ErrorKind::OutOfMemory))?;
         self.0.extend_from_slice(buf);
         Ok(())
+    }
+}
+
+trait ExtendWith<T> {
+    fn next(&mut self) -> Result<T, AllocError>;
+    fn last(self) -> Result<T, AllocError>;
+}
+
+struct ExtendElement<T>(T);
+
+impl<T: TryClone> ExtendWith<T> for ExtendElement<T> {
+    #[inline(always)]
+    default fn next(&mut self) -> Result<T, AllocError> {
+        self.0.try_clone()
+    }
+
+    #[inline(always)]
+    default fn last(self) -> Result<T, AllocError> {
+        Ok(self.0)
+    }
+}
+
+struct ExtendFunc<F>(F);
+
+impl<T, F> ExtendWith<T> for ExtendFunc<F>
+where
+    F: FnMut() -> Result<T, AllocError>,
+{
+    #[inline(always)]
+    fn next(&mut self) -> Result<T, AllocError> {
+        (self.0)()
+    }
+
+    #[inline(always)]
+    fn last(mut self) -> Result<T, AllocError> {
+        (self.0)()
+    }
+}
+
+struct SetLenOnDrop<'a, T, A: Allocator> {
+    vec: &'a mut Vec<T, A>,
+    local_len: usize,
+}
+
+impl<'a, T, A: Allocator> SetLenOnDrop<'a, T, A> {
+    #[inline]
+    fn new(vec: &'a mut Vec<T, A>) -> Self {
+        SetLenOnDrop {
+            local_len: vec.len(),
+            vec,
+        }
+    }
+
+    #[inline(always)]
+    fn increment_len(&mut self, increment: usize) {
+        self.local_len += increment;
+    }
+}
+
+impl<'a, T, A: Allocator> Drop for SetLenOnDrop<'a, T, A> {
+    #[inline]
+    fn drop(&mut self) {
+        unsafe {
+            self.vec.set_len(self.local_len);
+        }
     }
 }
