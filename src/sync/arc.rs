@@ -2,6 +2,7 @@
 
 use crate::alloc::AllocError;
 use crate::clone::TryClone;
+use crate::sync::Weak;
 use std::alloc::Layout;
 use std::fmt;
 use std::hash::Hash;
@@ -30,7 +31,9 @@ impl<T> Arc<T> {
             StdArc::try_new(data).map_err(|_| AllocError::new(Layout::new::<T>()))?
         ))
     }
+}
 
+impl<T: ?Sized> Arc<T> {
     #[inline]
     pub fn into_std(self) -> StdArc<T> {
         self.0
@@ -39,6 +42,48 @@ impl<T> Arc<T> {
     #[inline]
     pub fn from_std(a: StdArc<T>) -> Self {
         Arc(a)
+    }
+
+    /// Creates a new [`Weak`] pointer to this allocation.
+    #[must_use = "this returns a new `Weak` pointer, \
+                  without modifying the original `Arc`"]
+    #[inline]
+    pub fn downgrade(this: &Self) -> Weak<T> {
+        Weak::from_std(StdArc::downgrade(&this.0))
+    }
+
+    /// Gets the number of [`Weak`] pointers to this allocation.
+    ///
+    /// # Safety
+    ///
+    /// This method by itself is safe, but using it correctly requires extra care.
+    /// Another thread can change the weak count at any time,
+    /// including potentially between calling this method and acting on the result.
+    #[must_use]
+    #[inline]
+    pub fn weak_count(this: &Self) -> usize {
+        StdArc::weak_count(&this.0)
+    }
+
+    /// Gets the number of strong (`Arc`) pointers to this allocation.
+    ///
+    /// # Safety
+    ///
+    /// This method by itself is safe, but using it correctly requires extra care.
+    /// Another thread can change the strong count at any time,
+    /// including potentially between calling this method and acting on the result.
+    #[must_use]
+    #[inline]
+    pub fn strong_count(this: &Self) -> usize {
+        StdArc::strong_count(&this.0)
+    }
+
+    /// Returns `true` if the two `Arc`s point to the same allocation
+    /// (in a vein similar to [`std::ptr::eq`]).
+    #[must_use]
+    #[inline]
+    pub fn ptr_eq(this: &Self, other: &Self) -> bool {
+        StdArc::ptr_eq(&this.0, &other.0)
     }
 }
 
