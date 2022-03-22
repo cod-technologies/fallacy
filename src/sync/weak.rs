@@ -1,4 +1,3 @@
-use crate::alloc::AllocError;
 use crate::clone::TryClone;
 use crate::sync::Arc;
 use std::fmt;
@@ -24,7 +23,7 @@ use std::sync::Weak as StdWeak;
 /// The typical way to obtain a `Weak` pointer is to call [`Arc::downgrade`].
 ///
 /// [`upgrade`]: Weak::upgrade
-#[derive(Clone, Default)]
+#[derive(Clone, TryClone, Default)]
 #[repr(transparent)]
 pub struct Weak<T: ?Sized>(StdWeak<T>);
 
@@ -101,12 +100,5 @@ impl<T: ?Sized + fmt::Debug> fmt::Debug for Weak<T> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.0, f)
-    }
-}
-
-impl<T: TryClone> TryClone for Weak<T> {
-    #[inline]
-    fn try_clone(&self) -> Result<Self, AllocError> {
-        Ok(Weak(self.0.clone()))
     }
 }

@@ -212,11 +212,11 @@ impl<T: ?Sized, A: Allocator> fmt::Pointer for Box<T, A> {
     }
 }
 
-impl<T: TryClone> TryClone for Box<T> {
+impl<T: TryClone, A: Allocator + TryClone> TryClone for Box<T, A> {
     #[inline]
     fn try_clone(&self) -> Result<Self, AllocError> {
         let clone = self.0.try_clone()?;
-        Self::try_new(clone)
+        Ok(Box::from_std(clone))
     }
 
     #[inline]
