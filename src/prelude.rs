@@ -4,6 +4,9 @@
 pub use crate::boxed::Box;
 
 #[doc(no_inline)]
+pub use crate::clone::TryClone;
+
+#[doc(no_inline)]
 pub use crate::string::{String, TryToString};
 
 #[doc(no_inline)]
