@@ -9,6 +9,7 @@ pub mod borrow;
 pub mod boxed;
 pub mod collections;
 pub mod fmt;
+pub mod prelude;
 pub mod string;
 pub mod sync;
 pub mod vec;
