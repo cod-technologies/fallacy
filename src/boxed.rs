@@ -4,13 +4,13 @@ use crate::alloc::AllocError;
 use crate::clone::TryClone;
 use std::alloc::{Allocator, Global, Layout};
 use std::boxed::Box as StdBox;
-use std::cmp::Ordering;
 use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
 use std::result::Result;
 
 /// A pointer type for heap allocation.
+#[derive(Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[repr(transparent)]
 pub struct Box<T: ?Sized, A: Allocator = Global>(StdBox<T, A>);
 
@@ -188,128 +188,6 @@ impl<T: ?Sized, A: Allocator> AsMut<T> for Box<T, A> {
     #[inline]
     fn as_mut(&mut self) -> &mut T {
         self.0.as_mut()
-    }
-}
-
-impl<T: ?Sized + PartialEq, A: Allocator> PartialEq for Box<T, A> {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.0.eq(&other.0)
-    }
-}
-
-impl<T: ?Sized + PartialOrd, A: Allocator> PartialOrd for Box<T, A> {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
-
-    #[inline]
-    fn lt(&self, other: &Self) -> bool {
-        self.0.lt(&other.0)
-    }
-
-    #[inline]
-    fn le(&self, other: &Self) -> bool {
-        self.0.le(&other.0)
-    }
-
-    #[inline]
-    fn gt(&self, other: &Self) -> bool {
-        self.0.gt(&other.0)
-    }
-
-    #[inline]
-    fn ge(&self, other: &Self) -> bool {
-        self.0.ge(&other.0)
-    }
-}
-
-impl<T: ?Sized + Ord, A: Allocator> Ord for Box<T, A> {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.cmp(&other.0)
-    }
-}
-
-impl<T: ?Sized + Eq, A: Allocator> Eq for Box<T, A> {}
-
-impl<T: ?Sized + Hash, A: Allocator> Hash for Box<T, A> {
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.hash(state)
-    }
-}
-
-impl<T: ?Sized + Hasher, A: Allocator> Hasher for Box<T, A> {
-    #[inline]
-    fn finish(&self) -> u64 {
-        self.0.finish()
-    }
-
-    #[inline]
-    fn write(&mut self, bytes: &[u8]) {
-        self.0.write(bytes)
-    }
-
-    #[inline]
-    fn write_u8(&mut self, i: u8) {
-        self.0.write_u8(i)
-    }
-
-    #[inline]
-    fn write_u16(&mut self, i: u16) {
-        self.0.write_u16(i)
-    }
-
-    #[inline]
-    fn write_u32(&mut self, i: u32) {
-        self.0.write_u32(i)
-    }
-
-    #[inline]
-    fn write_u64(&mut self, i: u64) {
-        self.0.write_u64(i)
-    }
-
-    #[inline]
-    fn write_u128(&mut self, i: u128) {
-        self.0.write_u128(i)
-    }
-
-    #[inline]
-    fn write_usize(&mut self, i: usize) {
-        self.0.write_usize(i)
-    }
-
-    #[inline]
-    fn write_i8(&mut self, i: i8) {
-        self.0.write_i8(i)
-    }
-
-    #[inline]
-    fn write_i16(&mut self, i: i16) {
-        self.0.write_i16(i)
-    }
-
-    #[inline]
-    fn write_i32(&mut self, i: i32) {
-        self.0.write_i32(i)
-    }
-
-    #[inline]
-    fn write_i64(&mut self, i: i64) {
-        self.0.write_i64(i)
-    }
-
-    #[inline]
-    fn write_i128(&mut self, i: i128) {
-        self.0.write_i128(i)
-    }
-
-    #[inline]
-    fn write_isize(&mut self, i: isize) {
-        self.0.write_isize(i)
     }
 }
 
