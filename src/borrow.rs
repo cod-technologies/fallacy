@@ -3,6 +3,7 @@
 use crate::alloc::AllocError;
 use crate::clone::TryClone;
 use crate::string::String;
+use crate::vec::Vec;
 use std::borrow::Borrow;
 use std::ops::Deref;
 
@@ -60,6 +61,23 @@ impl TryToOwned for str {
     fn try_clone_into(&self, target: &mut String) -> Result<(), AllocError> {
         target.clear();
         target.try_push_str(self)
+    }
+}
+
+impl TryToOwned for [u8] {
+    type Owned = Vec<u8>;
+
+    #[inline]
+    fn try_to_owned(&self) -> Result<Self::Owned, AllocError> {
+        let mut s = Vec::new();
+        s.try_copy_from_slice(self)?;
+        Ok(s)
+    }
+
+    #[inline]
+    fn try_clone_into(&self, target: &mut Vec<u8>) -> Result<(), AllocError> {
+        target.clear();
+        target.try_copy_from_slice(self)
     }
 }
 

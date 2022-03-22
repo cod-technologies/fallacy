@@ -9,9 +9,9 @@
 use crate::alloc::AllocError;
 use crate::clone::TryClone;
 use std::alloc::{Allocator, Global};
-use std::cmp::Ordering;
+use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::io;
 use std::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
 use std::ptr;
@@ -19,6 +19,7 @@ use std::slice::SliceIndex;
 use std::vec::{Drain, IntoIter, Vec as StdVec};
 
 /// A contiguous growable array type, written as `Vec<T>`, short for 'vector'.
+#[derive(Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[repr(transparent)]
 pub struct Vec<T, A: Allocator = Global>(StdVec<T, A>);
 
@@ -396,13 +397,6 @@ impl<T, A: Allocator> DerefMut for Vec<T, A> {
     }
 }
 
-impl<T: Hash, A: Allocator> Hash for Vec<T, A> {
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.hash(state)
-    }
-}
-
 impl<T, I: SliceIndex<[T]>, A: Allocator> Index<I> for Vec<T, A> {
     type Output = I::Output;
 
@@ -449,29 +443,6 @@ impl<'a, T, A: Allocator> IntoIterator for &'a mut Vec<T, A> {
     }
 }
 
-impl<T: PartialEq, A: Allocator> PartialEq for Vec<T, A> {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.0.eq(&other.0)
-    }
-}
-
-impl<T: PartialOrd, A: Allocator> PartialOrd for Vec<T, A> {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
-}
-
-impl<T: Eq, A: Allocator> Eq for Vec<T, A> {}
-
-impl<T: Ord, A: Allocator> Ord for Vec<T, A> {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.cmp(&other.0)
-    }
-}
-
 impl<T: fmt::Debug, A: Allocator> fmt::Debug for Vec<T, A> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -503,6 +474,20 @@ impl<T, A: Allocator> AsRef<[T]> for Vec<T, A> {
 impl<T, A: Allocator> AsMut<[T]> for Vec<T, A> {
     #[inline]
     fn as_mut(&mut self) -> &mut [T] {
+        self
+    }
+}
+
+impl<A: Allocator> Borrow<[u8]> for Vec<u8, A> {
+    #[inline]
+    fn borrow(&self) -> &[u8] {
+        self
+    }
+}
+
+impl<A: Allocator> BorrowMut<[u8]> for Vec<u8, A> {
+    #[inline]
+    fn borrow_mut(&mut self) -> &mut [u8] {
         self
     }
 }
