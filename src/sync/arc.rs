@@ -3,9 +3,8 @@
 use crate::alloc::AllocError;
 use crate::clone::TryClone;
 use std::alloc::Layout;
-use std::cmp::Ordering;
 use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::ops::Deref;
 use std::sync::Arc as StdArc;
 
@@ -19,6 +18,7 @@ use std::sync::Arc as StdArc;
 /// source `Arc`, while increasing a reference count. When the last `Arc`
 /// pointer to a given allocation is destroyed, the value stored in that allocation (often
 /// referred to as "inner value") is also dropped.
+#[derive(Clone, TryClone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[repr(transparent)]
 pub struct Arc<T: ?Sized>(StdArc<T>);
 
@@ -42,28 +42,6 @@ impl<T> Arc<T> {
     }
 }
 
-impl<T: ?Sized> Clone for Arc<T> {
-    /// Makes a clone of the `Arc` pointer.
-    ///
-    /// This creates another pointer to the same allocation, increasing the
-    /// strong reference count.
-    #[inline]
-    fn clone(&self) -> Arc<T> {
-        Arc(self.0.clone())
-    }
-}
-
-impl<T: ?Sized> TryClone for Arc<T> {
-    /// Makes a clone of the `Arc` pointer.
-    ///
-    /// This creates another pointer to the same allocation, increasing the
-    /// strong reference count.
-    #[inline]
-    fn try_clone(&self) -> Result<Self, AllocError> {
-        Ok(Arc(self.0.clone()))
-    }
-}
-
 impl<T: ?Sized> Deref for Arc<T> {
     type Target = T;
 
@@ -79,49 +57,6 @@ impl<T: ?Sized> AsRef<T> for Arc<T> {
         self.0.as_ref()
     }
 }
-
-impl<T: ?Sized + PartialEq> PartialEq for Arc<T> {
-    #[inline]
-    fn eq(&self, other: &Arc<T>) -> bool {
-        self.0.eq(&other.0)
-    }
-}
-
-impl<T: ?Sized + PartialOrd> PartialOrd for Arc<T> {
-    #[inline]
-    fn partial_cmp(&self, other: &Arc<T>) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
-
-    #[inline]
-    fn lt(&self, other: &Arc<T>) -> bool {
-        self.0.lt(&other.0)
-    }
-
-    #[inline]
-    fn le(&self, other: &Arc<T>) -> bool {
-        self.0.le(&other.0)
-    }
-
-    #[inline]
-    fn gt(&self, other: &Arc<T>) -> bool {
-        self.0.gt(&other.0)
-    }
-
-    #[inline]
-    fn ge(&self, other: &Arc<T>) -> bool {
-        self.0.ge(&other.0)
-    }
-}
-
-impl<T: ?Sized + Ord> Ord for Arc<T> {
-    #[inline]
-    fn cmp(&self, other: &Arc<T>) -> Ordering {
-        self.0.cmp(&other.0)
-    }
-}
-
-impl<T: ?Sized + Eq> Eq for Arc<T> {}
 
 impl<T: ?Sized + fmt::Display> fmt::Display for Arc<T> {
     #[inline]
@@ -141,12 +76,5 @@ impl<T: ?Sized> fmt::Pointer for Arc<T> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Pointer::fmt(&self.0, f)
-    }
-}
-
-impl<T: ?Sized + Hash> Hash for Arc<T> {
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.hash(state)
     }
 }

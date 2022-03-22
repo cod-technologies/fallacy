@@ -15,6 +15,7 @@ use std::string::String as StdString;
 /// The `String` type is the most common string type that has ownership over the
 /// contents of the string. It has a close relationship with its borrowed
 /// counterpart, the primitive `str`.
+#[derive(Ord, PartialOrd, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct String(StdString);
 
@@ -163,13 +164,6 @@ impl String {
     #[inline]
     pub fn clear(&mut self) {
         self.0.clear();
-    }
-}
-
-impl PartialEq for String {
-    #[inline]
-    fn eq(&self, other: &String) -> bool {
-        self.0.eq(&other.0)
     }
 }
 
