@@ -81,6 +81,20 @@ impl String {
         self.0.as_mut_str()
     }
 
+    /// Returns a mutable reference to the contents of this `String`.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because the returned `&mut Vec` allows writing
+    /// bytes which are not valid UTF-8. If this constraint is violated, using
+    /// the original `String` after dropping the `&mut Vec` may violate memory
+    /// safety, as the rest of the standard library assumes that `String`s are
+    /// valid UTF-8.
+    #[inline]
+    pub unsafe fn as_mut_vec(&mut self) -> &mut Vec<u8> {
+        self.0.as_mut_vec()
+    }
+
     /// Appends a given string slice onto the end of this `String`.
     #[inline]
     pub fn try_push_str(&mut self, string: &str) -> Result<(), AllocError> {
