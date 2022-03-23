@@ -7,7 +7,10 @@ pub use std::collections::hash_map::{
 use crate::alloc::AllocError;
 use std::borrow::Borrow;
 use std::collections::HashMap as StdHashMap;
+use std::fmt;
+use std::fmt::Debug;
 use std::hash::{BuildHasher, Hash};
+use std::ops::Index;
 
 /// A hash map implemented with quadratic probing.
 #[repr(transparent)]
@@ -330,5 +333,55 @@ where
     #[inline]
     fn default() -> Self {
         HashMap::with_hasher(Default::default())
+    }
+}
+
+impl<K, V, S> PartialEq for HashMap<K, V, S>
+where
+    K: Eq + Hash,
+    V: PartialEq,
+    S: BuildHasher,
+{
+    #[inline]
+    fn eq(&self, other: &HashMap<K, V, S>) -> bool {
+        self.0.eq(&other.0)
+    }
+}
+
+impl<K, V, S> Eq for HashMap<K, V, S>
+where
+    K: Eq + Hash,
+    V: Eq,
+    S: BuildHasher,
+{
+}
+
+impl<K, V, S> Debug for HashMap<K, V, S>
+where
+    K: Debug,
+    V: Debug,
+{
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.0, f)
+    }
+}
+
+impl<K, Q: ?Sized, V, S> Index<&Q> for HashMap<K, V, S>
+where
+    K: Eq + Hash + Borrow<Q>,
+    Q: Eq + Hash,
+    S: BuildHasher,
+{
+    type Output = V;
+
+    /// Returns a reference to the value corresponding to the supplied key.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the key is not present in the `HashMap`.
+    #[inline]
+    fn index(&self, key: &Q) -> &V {
+        self.0.index(key)
     }
 }
