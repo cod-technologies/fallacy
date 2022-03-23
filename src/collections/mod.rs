@@ -1,5 +1,6 @@
 //! Collection types.
 
-mod hash_map;
+pub mod hash_map;
 
+#[doc(inline)]
 pub use hash_map::HashMap;

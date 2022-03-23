@@ -1,10 +1,15 @@
-//! Hash map.
+//! A hash map implemented with quadratic probing.
+
+pub use std::collections::hash_map::{
+    Drain, Entry, IntoKeys, IntoValues, Iter, IterMut, Keys, RandomState, Values, ValuesMut,
+};
 
 use crate::alloc::AllocError;
-use std::collections::hash_map::{Drain, IntoKeys, IntoValues, Iter, IterMut, Keys, RandomState, Values, ValuesMut};
+use std::borrow::Borrow;
 use std::collections::HashMap as StdHashMap;
 use std::hash::{BuildHasher, Hash};
 
+/// A hash map implemented with quadratic probing.
 #[repr(transparent)]
 pub struct HashMap<K, V, S = RandomState>(StdHashMap<K, V, S>);
 
@@ -195,6 +200,126 @@ where
         let mut m = StdHashMap::with_hasher(hash_builder);
         m.try_reserve(capacity)?;
         Ok(HashMap(m))
+    }
+
+    /// Tries to reserve capacity for at least `additional` more elements to be inserted
+    /// in the given `HashMap<K, V>`. The collection may reserve more space to avoid
+    /// frequent reallocations.
+    ///
+    /// # Errors
+    ///
+    /// If the capacity overflows, or the allocator reports a failure, then an error
+    /// is returned.
+    #[inline]
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), AllocError> {
+        self.0.try_reserve(additional)?;
+        Ok(())
+    }
+
+    /// Gets the given key's corresponding entry in the map for in-place manipulation.
+    #[inline]
+    pub fn try_entry(&mut self, key: K) -> Result<Entry<'_, K, V>, AllocError> {
+        self.0.try_reserve(1)?;
+        Ok(self.0.entry(key))
+    }
+
+    /// Returns a reference to the value corresponding to the key.
+    ///
+    /// The key may be any borrowed form of the map's key type, but
+    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
+    /// the key type.
+    #[inline]
+    pub fn get<Q: ?Sized>(&self, k: &Q) -> Option<&V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.0.get(k)
+    }
+
+    /// Returns the key-value pair corresponding to the supplied key.
+    ///
+    /// The supplied key may be any borrowed form of the map's key type, but
+    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
+    /// the key type.
+    #[inline]
+    pub fn get_key_value<Q: ?Sized>(&self, k: &Q) -> Option<(&K, &V)>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.0.get_key_value(k)
+    }
+
+    /// Returns `true` if the map contains a value for the specified key.
+    ///
+    /// The key may be any borrowed form of the map's key type, but
+    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
+    /// the key type.
+    #[inline]
+    pub fn contains_key<Q: ?Sized>(&self, k: &Q) -> bool
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.0.contains_key(k)
+    }
+
+    /// Returns a mutable reference to the value corresponding to the key.
+    ///
+    /// The key may be any borrowed form of the map's key type, but
+    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
+    /// the key type.
+    #[inline]
+    pub fn get_mut<Q: ?Sized>(&mut self, k: &Q) -> Option<&mut V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.0.get_mut(k)
+    }
+
+    /// Inserts a key-value pair into the map.
+    ///
+    /// If the map did not have this key present, [`None`] is returned.
+    ///
+    /// If the map did have this key present, the value is updated, and the old
+    /// value is returned. The key is not updated, though; this matters for
+    /// types that can be `==` without being identical.
+    #[inline]
+    pub fn try_insert(&mut self, k: K, v: V) -> Result<Option<V>, AllocError> {
+        self.0.try_reserve(1)?;
+        Ok(self.0.insert(k, v))
+    }
+
+    /// Removes a key from the map, returning the value at the key if the key
+    /// was previously in the map.
+    ///
+    /// The key may be any borrowed form of the map's key type, but
+    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
+    /// the key type.
+    #[inline]
+    pub fn remove<Q: ?Sized>(&mut self, k: &Q) -> Option<V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.0.remove(k)
+    }
+
+    /// Removes a key from the map, returning the stored key and value if the
+    /// key was previously in the map.
+    ///
+    /// The key may be any borrowed form of the map's key type, but
+    /// [`Hash`] and [`Eq`] on the borrowed form *must* match those for
+    /// the key type.
+    #[inline]
+    pub fn remove_entry<Q: ?Sized>(&mut self, k: &Q) -> Option<(K, V)>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.0.remove_entry(k)
     }
 }
 
