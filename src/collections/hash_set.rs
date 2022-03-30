@@ -26,6 +26,16 @@ impl<T> HashSet<T, RandomState> {
 }
 
 impl<T, S> HashSet<T, S> {
+    #[inline]
+    pub fn from_std(hash_set: StdHashSet<T, S>) -> Self {
+        HashSet(hash_set)
+    }
+
+    #[inline]
+    pub fn into_std(self) -> StdHashSet<T, S> {
+        self.0
+    }
+
     /// Returns the number of elements the set can hold without reallocating.
     #[inline]
     pub fn capacity(&self) -> usize {
