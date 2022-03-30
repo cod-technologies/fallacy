@@ -464,6 +464,20 @@ impl<T, A: Allocator> AsMut<Vec<T, A>> for Vec<T, A> {
     }
 }
 
+impl<T, A: Allocator> AsRef<StdVec<T, A>> for Vec<T, A> {
+    #[inline]
+    fn as_ref(&self) -> &StdVec<T, A> {
+        &self.0
+    }
+}
+
+impl<T, A: Allocator> AsMut<StdVec<T, A>> for Vec<T, A> {
+    #[inline]
+    fn as_mut(&mut self) -> &mut StdVec<T, A> {
+        &mut self.0
+    }
+}
+
 impl<T, A: Allocator> AsRef<[T]> for Vec<T, A> {
     #[inline]
     fn as_ref(&self) -> &[T] {
