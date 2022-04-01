@@ -1,8 +1,7 @@
 //! A hash map implemented with quadratic probing.
 
-pub use std::collections::hash_map::{
-    Drain, Entry, IntoKeys, IntoValues, Iter, IterMut, Keys, RandomState, Values, ValuesMut,
-};
+pub use fxhash::{FxBuildHasher, FxHasher};
+pub use std::collections::hash_map::{Drain, Entry, IntoKeys, IntoValues, Iter, IterMut, Keys, Values, ValuesMut};
 
 use crate::alloc::AllocError;
 use std::borrow::Borrow;
@@ -14,17 +13,17 @@ use std::ops::Index;
 
 /// A hash map implemented with quadratic probing.
 #[repr(transparent)]
-pub struct HashMap<K, V, S = RandomState>(StdHashMap<K, V, S>);
+pub struct HashMap<K, V, S = FxBuildHasher>(StdHashMap<K, V, S>);
 
-impl<K, V> HashMap<K, V, RandomState> {
+impl<K, V> HashMap<K, V, FxBuildHasher> {
     /// Creates an empty `HashMap`.
     ///
     /// The hash map is initially created with a capacity of 0, so it will not allocate until it
     /// is first inserted into.
     #[must_use]
     #[inline]
-    pub fn new() -> HashMap<K, V, RandomState> {
-        HashMap(StdHashMap::new())
+    pub fn new() -> HashMap<K, V, FxBuildHasher> {
+        HashMap::default()
     }
 }
 

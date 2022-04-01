@@ -3,6 +3,7 @@
 pub use std::collections::hash_set::{Drain, Iter};
 
 use crate::alloc::AllocError;
+use crate::collections::hash_map::FxBuildHasher;
 use std::borrow::Borrow;
 use std::collections::hash_map::RandomState;
 use std::collections::HashSet as StdHashSet;
@@ -11,17 +12,17 @@ use std::hash::{BuildHasher, Hash};
 
 /// A hash set implemented as a `HashMap` where the value is `()`.
 #[repr(transparent)]
-pub struct HashSet<T, S = RandomState>(StdHashSet<T, S>);
+pub struct HashSet<T, S = FxBuildHasher>(StdHashSet<T, S>);
 
-impl<T> HashSet<T, RandomState> {
+impl<T> HashSet<T, FxBuildHasher> {
     /// Creates an empty `HashSet`.
     ///
     /// The hash set is initially created with a capacity of 0, so it will not allocate until it
     /// is first inserted into.
     #[must_use]
     #[inline]
-    pub fn new() -> HashSet<T, RandomState> {
-        HashSet(StdHashSet::new())
+    pub fn new() -> HashSet<T, FxBuildHasher> {
+        HashSet::default()
     }
 }
 
