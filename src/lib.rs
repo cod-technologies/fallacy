@@ -4,12 +4,16 @@
 #![feature(can_vector)]
 #![feature(fmt_internals)]
 #![feature(min_specialization)]
+#![feature(unicode_internals)]
+
+extern crate core;
 
 pub mod borrow;
 pub mod boxed;
 pub mod collections;
 pub mod fmt;
 pub mod prelude;
+pub mod str;
 pub mod string;
 pub mod sync;
 pub mod vec;
@@ -22,4 +26,8 @@ pub mod alloc {
 /// The `TryClone` trait for types that cannot be 'implicitly copied'.
 pub mod clone {
     pub use fallacy_clone::TryClone;
+}
+
+mod sealed {
+    pub trait Sealed {}
 }

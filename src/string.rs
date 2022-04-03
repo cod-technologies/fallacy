@@ -1,8 +1,11 @@
 //! A UTF-8–encoded, growable string.
 
+pub use std::string::FromUtf8Error;
+
 use crate::alloc::AllocError;
 use crate::borrow::{Cow, TryToOwned};
 use crate::clone::TryClone;
+use crate::vec::Vec;
 use std::borrow::Borrow;
 use std::fmt;
 use std::mem;
@@ -42,6 +45,64 @@ impl String {
     #[inline]
     pub fn into_std(self) -> StdString {
         self.0
+    }
+
+    /// Converts a vector of bytes to a `String`.
+    ///
+    /// A string ([`String`]) is made of bytes ([`u8`]), and a vector of bytes
+    /// ([`Vec<u8>`]) is made of bytes, so this function converts between the
+    /// two. Not all byte slices are valid `String`s, however: `String`
+    /// requires that it is valid UTF-8. `from_utf8()` checks to ensure that
+    /// the bytes are valid UTF-8, and then does the conversion.
+    ///
+    /// If you are sure that the byte slice is valid UTF-8, and you don't want
+    /// to incur the overhead of the validity check, there is an unsafe version
+    /// of this function, [`String::from_utf8_unchecked`], which has the same behavior
+    /// but skips the check.
+    ///
+    /// This method will take care to not copy the vector, for efficiency's
+    /// sake.
+    ///
+    /// If you need a [`&str`] instead of a `String`, consider
+    /// [`str::from_utf8`].
+    ///
+    /// The inverse of this method is [`String::into_bytes`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] if the slice is not UTF-8 with a description as to why the
+    /// provided bytes are not UTF-8. The vector you moved in is also included.
+    #[inline]
+    pub fn from_utf8(vec: Vec<u8>) -> Result<String, FromUtf8Error> {
+        Ok(String(StdString::from_utf8(vec.into_std())?))
+    }
+
+    /// Converts a vector of bytes to a `String` without checking that the
+    /// string contains valid UTF-8.
+    ///
+    /// See the safe version, [`from_utf8`], for more details.
+    ///
+    /// [`from_utf8`]: String::from_utf8
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it does not check that the bytes passed
+    /// to it are valid UTF-8. If this constraint is violated, it may cause
+    /// memory unsafety issues with future users of the `String`, as the rest of
+    /// the standard library assumes that `String`s are valid UTF-8.
+    #[must_use]
+    #[inline]
+    pub unsafe fn from_utf8_unchecked(bytes: Vec<u8>) -> String {
+        String(StdString::from_utf8_unchecked(bytes.into_std()))
+    }
+
+    /// Converts a `String` into a byte vector.
+    ///
+    /// This consumes the `String`, so we do not need to copy its contents.
+    #[inline]
+    #[must_use = "`self` will be dropped if the result is not used"]
+    pub fn into_bytes(self) -> Vec<u8> {
+        Vec::from_std(self.0.into_bytes())
     }
 
     /// Returns this `String`'s capacity, in bytes.
@@ -92,7 +153,8 @@ impl String {
     /// valid UTF-8.
     #[inline]
     pub unsafe fn as_mut_vec(&mut self) -> &mut Vec<u8> {
-        self.0.as_mut_vec()
+        // Vec has the same memory layout as StdVec
+        std::mem::transmute(self.0.as_mut_vec())
     }
 
     /// Appends a given string slice onto the end of this `String`.
@@ -146,6 +208,12 @@ impl String {
         self.try_reserve(mem::size_of::<char>())?;
         self.0.push(ch);
         Ok(())
+    }
+
+    /// Notes: This function has OOM panic problem.
+    #[inline]
+    pub(crate) fn push(&mut self, ch: char) {
+        self.0.push(ch);
     }
 
     /// Returns a byte slice of this `String`'s contents.

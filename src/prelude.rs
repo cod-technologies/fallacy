@@ -10,6 +10,9 @@ pub use crate::clone::TryClone;
 pub use crate::string::{String, TryToString};
 
 #[doc(no_inline)]
+pub use crate::str::StrExt;
+
+#[doc(no_inline)]
 pub use crate::vec::Vec;
 
 #[doc(no_inline)]
