@@ -1,7 +1,3 @@
 //! Useful synchronization primitives.
 
-mod arc;
-mod weak;
-
-pub use arc::Arc;
-pub use weak::Weak;
+pub use fallacy_arc::{Arc, Weak};

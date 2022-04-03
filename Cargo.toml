@@ -15,4 +15,5 @@ documentation = "https://docs.rs/fallacy/"
 [dependencies]
 fallacy-alloc = "0.1.0"
 fallacy-clone = { version = "0.1.1", features = ["derive"] }
+fallacy-arc = "0.1.0"
 fxhash = "0.2.1"
