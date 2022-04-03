@@ -9,7 +9,6 @@
 extern crate core;
 
 pub mod borrow;
-pub mod boxed;
 pub mod collections;
 pub mod fmt;
 pub mod prelude;
@@ -21,11 +20,17 @@ pub mod vec;
 /// Memory allocation & deallocation.
 pub mod alloc {
     pub use fallacy_alloc::AllocError;
+    pub use std::alloc::{Allocator, Global, Layout};
 }
 
 /// The `TryClone` trait for types that cannot be 'implicitly copied'.
 pub mod clone {
     pub use fallacy_clone::TryClone;
+}
+
+/// A pointer type for heap allocation.
+pub mod boxed {
+    pub use fallacy_box::Box;
 }
 
 mod sealed {
