@@ -13,11 +13,12 @@ homepage = "https://github.com/fallacy-rs/fallacy"
 documentation = "https://docs.rs/fallacy/"
 
 [features]
-serde = ["fallacy-box/serde", "fallacy-arc/serde"]
+derive = ["fallacy-clone/derive"]
+serde = ["fallacy-box/serde", "fallacy-arc/serde", "fallacy-hash/serde"]
 
 [dependencies]
 fallacy-alloc = "0.1.0"
-fallacy-clone = { version = "0.1.1", features = ["derive"] }
+fallacy-clone = "0.1.1"
 fallacy-box = "0.1.1"
 fallacy-arc = "0.1.1"
 fallacy-hash = "0.1.0"
