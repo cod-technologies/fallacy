@@ -12,9 +12,12 @@ repository = "https://github.com/fallacy-rs/fallacy.git"
 homepage = "https://github.com/fallacy-rs/fallacy"
 documentation = "https://docs.rs/fallacy/"
 
+[features]
+serde = ["fallacy-box/serde", "fallacy-arc/serde"]
+
 [dependencies]
 fallacy-alloc = "0.1.0"
 fallacy-clone = { version = "0.1.1", features = ["derive"] }
-fallacy-box = "0.1.0"
-fallacy-arc = "0.1.0"
+fallacy-box = "0.1.1"
+fallacy-arc = "0.1.1"
 fxhash = "0.2.1"
