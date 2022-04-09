@@ -190,3 +190,36 @@ impl<T: ?Sized + TryToOwned> AsRef<T> for Cow<'_, T> {
         self
     }
 }
+
+#[cfg(feature = "serde")]
+mod serde {
+    use super::{Cow, TryToOwned};
+    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+
+    impl<'a, T> Serialize for Cow<'a, T>
+    where
+        T: TryToOwned + Serialize,
+    {
+        #[inline]
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            (**self).serialize(serializer)
+        }
+    }
+
+    impl<'de, 'a, T: ?Sized> Deserialize<'de> for Cow<'a, T>
+    where
+        T: TryToOwned,
+        T::Owned: Deserialize<'de>,
+    {
+        #[inline]
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            T::Owned::deserialize(deserializer).map(Cow::Owned)
+        }
+    }
+}
