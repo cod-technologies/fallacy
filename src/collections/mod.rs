@@ -1,7 +1,7 @@
 //! Collection types.
 
-pub mod hash_map;
-pub mod hash_set;
+pub use fallacy_hash::hash_map;
+pub use fallacy_hash::hash_set;
 
 #[doc(inline)]
 pub use hash_map::HashMap;

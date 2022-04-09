@@ -20,4 +20,4 @@ fallacy-alloc = "0.1.0"
 fallacy-clone = { version = "0.1.1", features = ["derive"] }
 fallacy-box = "0.1.1"
 fallacy-arc = "0.1.1"
-fxhash = "0.2.1"
+fallacy-hash = "0.1.0"
