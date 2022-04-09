@@ -537,3 +537,149 @@ impl TryToString for String {
         self.try_clone()
     }
 }
+
+#[cfg(feature = "serde")]
+mod serde {
+    use super::String;
+    use crate::borrow::TryToOwned;
+    use crate::vec::Vec;
+    use serde_crate::de::{Error, Unexpected, Visitor};
+    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::fmt;
+    use std::string::String as StdString;
+    use std::vec::Vec as StdVec;
+
+    impl Serialize for String {
+        #[inline]
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serializer.serialize_str(self)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for String {
+        #[inline]
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            struct StringVisitor;
+
+            impl<'de> Visitor<'de> for StringVisitor {
+                type Value = String;
+
+                #[inline]
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("a string")
+                }
+
+                #[inline]
+                fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    v.try_to_owned().map_err(E::custom)
+                }
+
+                #[inline]
+                fn visit_string<E>(self, v: StdString) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    Ok(String::from_std(v))
+                }
+
+                #[inline]
+                fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    match std::str::from_utf8(v) {
+                        Ok(s) => s.try_to_owned().map_err(E::custom),
+                        Err(_) => Err(Error::invalid_value(Unexpected::Bytes(v), &self)),
+                    }
+                }
+
+                #[inline]
+                fn visit_byte_buf<E>(self, v: StdVec<u8>) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    match String::from_utf8(Vec::from_std(v)) {
+                        Ok(s) => Ok(s),
+                        Err(e) => Err(Error::invalid_value(Unexpected::Bytes(&e.into_bytes()), &self)),
+                    }
+                }
+            }
+
+            deserializer.deserialize_string(StringVisitor)
+        }
+
+        #[inline]
+        fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            struct StringInPlaceVisitor<'a>(&'a mut String);
+
+            impl<'a, 'de> Visitor<'de> for StringInPlaceVisitor<'a> {
+                type Value = ();
+
+                #[inline]
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("a string")
+                }
+
+                #[inline]
+                fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    self.0.clear();
+                    self.0.try_push_str(v).map_err(E::custom)
+                }
+
+                #[inline]
+                fn visit_string<E>(self, v: StdString) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    *self.0 = String::from_std(v);
+                    Ok(())
+                }
+
+                #[inline]
+                fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    match std::str::from_utf8(v) {
+                        Ok(s) => {
+                            self.0.clear();
+                            self.0.try_push_str(s).map_err(E::custom)
+                        }
+                        Err(_) => Err(Error::invalid_value(Unexpected::Bytes(v), &self)),
+                    }
+                }
+
+                #[inline]
+                fn visit_byte_buf<E>(self, v: StdVec<u8>) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    match String::from_utf8(Vec::from_std(v)) {
+                        Ok(s) => {
+                            *self.0 = s;
+                            Ok(())
+                        }
+                        Err(e) => Err(Error::invalid_value(Unexpected::Bytes(&e.into_bytes()), &self)),
+                    }
+                }
+            }
+
+            deserializer.deserialize_string(StringInPlaceVisitor(place))
+        }
+    }
+}

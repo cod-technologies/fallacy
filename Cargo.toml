@@ -14,7 +14,7 @@ documentation = "https://docs.rs/fallacy/"
 
 [features]
 derive = ["fallacy-clone/derive"]
-serde = ["fallacy-box/serde", "fallacy-arc/serde", "fallacy-hash/serde"]
+serde = ["serde_crate", "fallacy-box/serde", "fallacy-arc/serde", "fallacy-hash/serde"]
 
 [dependencies]
 fallacy-alloc = "0.1.0"
@@ -22,3 +22,4 @@ fallacy-clone = "0.1.1"
 fallacy-box = "0.1.1"
 fallacy-arc = "0.1.1"
 fallacy-hash = "0.1.0"
+serde_crate = { package = "serde", version = "1.0.136", optional = true }
