@@ -612,3 +612,132 @@ impl<'a, T, A: Allocator> Drop for SetLenOnDrop<'a, T, A> {
         }
     }
 }
+
+#[cfg(feature = "serde")]
+mod serde {
+    use super::Vec;
+    use serde_crate::de::{DeserializeSeed, Error, SeqAccess, Visitor};
+    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::fmt;
+    use std::marker::PhantomData;
+
+    impl<T: Serialize> Serialize for Vec<T> {
+        #[inline]
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serializer.collect_seq(self)
+        }
+    }
+
+    impl<'de, T> Deserialize<'de> for Vec<T>
+    where
+        T: Deserialize<'de>,
+    {
+        #[inline]
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            struct VecVisitor<T> {
+                _marker: PhantomData<T>,
+            }
+
+            impl<'de, T> Visitor<'de> for VecVisitor<T>
+            where
+                T: Deserialize<'de>,
+            {
+                type Value = Vec<T>;
+
+                #[inline]
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("a sequence")
+                }
+
+                #[inline]
+                fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+                where
+                    A: SeqAccess<'de>,
+                {
+                    let cap = seq.size_hint().unwrap_or(8).min(4096);
+                    let mut values = Vec::try_with_capacity(cap).map_err(A::Error::custom)?;
+
+                    while let Some(value) = seq.next_element()? {
+                        values.try_push(value).map_err(A::Error::custom)?;
+                    }
+
+                    Ok(values)
+                }
+            }
+
+            let visitor = VecVisitor { _marker: PhantomData };
+            deserializer.deserialize_seq(visitor)
+        }
+
+        #[inline]
+        fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            pub struct InPlaceSeed<'a, T: 'a>(pub &'a mut T);
+
+            impl<'a, 'de, T> DeserializeSeed<'de> for InPlaceSeed<'a, T>
+            where
+                T: Deserialize<'de>,
+            {
+                type Value = ();
+                fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    T::deserialize_in_place(deserializer, self.0)
+                }
+            }
+
+            struct VecInPlaceVisitor<'a, T: 'a>(&'a mut Vec<T>);
+
+            impl<'a, 'de, T> Visitor<'de> for VecInPlaceVisitor<'a, T>
+            where
+                T: Deserialize<'de>,
+            {
+                type Value = ();
+
+                #[inline]
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("a sequence")
+                }
+
+                #[inline]
+                fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+                where
+                    A: SeqAccess<'de>,
+                {
+                    let hint = seq.size_hint().unwrap_or(8).min(4096);
+                    if let Some(additional) = hint.checked_sub(self.0.len()) {
+                        self.0.try_reserve(additional).map_err(A::Error::custom)?;
+                    }
+
+                    for i in 0..self.0.len() {
+                        let next = {
+                            let next_place = InPlaceSeed(&mut self.0[i]);
+                            seq.next_element_seed(next_place)?
+                        };
+                        if next.is_none() {
+                            self.0.truncate(i);
+                            return Ok(());
+                        }
+                    }
+
+                    while let Some(value) = seq.next_element()? {
+                        self.0.try_push(value).map_err(A::Error::custom)?;
+                    }
+
+                    Ok(())
+                }
+            }
+
+            deserializer.deserialize_seq(VecInPlaceVisitor(place))
+        }
+    }
+}
